@@ -1,10 +1,18 @@
 import check = require("validator");
+import crypto = require("crypto");
 import fs = require("fs");
 import path = require("path");
 import shell = require("shelljs");
 import tasksBase = require("./default");
 import trace = require("../../../lib/trace");
-import { v1 as uuidv1 } from "uuid";
+
+function createTaskId(): string {
+	const bytes = crypto.randomBytes(16);
+	bytes[6] = (bytes[6] & 0x0f) | 0x40;
+	bytes[8] = (bytes[8] & 0x3f) | 0x80;
+	const hex = bytes.toString("hex");
+	return `${hex.substring(0, 8)}-${hex.substring(8, 12)}-${hex.substring(12, 16)}-${hex.substring(16, 20)}-${hex.substring(20, 32)}`;
+}
 
 
 export interface TaskCreateResult {
@@ -81,7 +89,7 @@ export class TaskCreate extends tasksBase.BuildTaskBase<TaskCreateResult> {
 
 			trace.debug("creating definition");
 			let def: any = {};
-			def.id = uuidv1();
+			def.id = createTaskId();
 			trace.debug("id: " + def.id);
 			def.name = taskName;
 			trace.debug("name: " + def.name);

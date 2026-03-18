@@ -31,7 +31,7 @@ export class BuildTaskValidate extends tasksBase.BuildTaskBase<agentContracts.Ta
 				//directory is good, check json
 
 				let tp = path.join(taskPath, c_taskJsonFile);
-				return vm.validate(tp, 'no ' + c_taskJsonFile + ' in specified directory').then((taskJson) => {
+				return Promise.resolve(vm.validate(tp)).then((taskJson) => {
 					let archive = archiver('zip');
 					archive.on('error', function (error) {
 						trace.debug('Archiving error: ' + error.message);
