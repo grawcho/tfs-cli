@@ -77,13 +77,13 @@ export class BuildQueue extends buildBase.BuildBase<buildBase.BuildArguments, bu
 		}
 
 		trace.println();
-		trace.info("id              	: %s", build.id);
-		trace.info("definition name 	: %s", build.definition ? build.definition.name : "unknown");
-		trace.info("requested by    	: %s", build.requestedBy ? build.requestedBy.displayName : "unknown");
-		trace.info("status          	: %s", buildContracts.BuildStatus[build.status]);
-		trace.info("queue time      	: %s", build.queueTime ? build.queueTime.toJSON() : "unknown");
-		trace.info("version			: %s", build.sourceVersion ? build.sourceVersion : "latest")
-		trace.info("branch / shelveset 	: %s", build.sourceBranch ? build.sourceBranch :"master (no shelveset)")
+		trace.info("id              : %s", build.id);
+		trace.info("definition name : %s", build.definition ? build.definition.name : "unknown");
+		trace.info("requested by    : %s", build.requestedBy ? build.requestedBy.displayName : "unknown");
+		trace.info("status          : %s", buildContracts.BuildStatus[build.status]);
+		trace.info("queue time      : %s", build.queueTime ? build.queueTime.toJSON() : "unknown");
+		trace.info("version         : %s", build.sourceVersion ? build.sourceVersion : "latest")
+		trace.info("branch/shelveset: %s", build.sourceBranch ? build.sourceBranch : "master (no shelveset)")
 		trace.println();
 	}
 
