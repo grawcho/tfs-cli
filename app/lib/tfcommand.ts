@@ -10,7 +10,6 @@ import args = require("./arguments");
 import { blue, cyan, gray, green, yellow, magenta, reset as resetColors, stripColors } from "colors";
 import command = require("../lib/command");
 import common = require("./common");
-import clipboardy = require("clipboardy");
 import { writeFile } from "fs";
 import loader = require("../lib/loader");
 import path = require("path");
@@ -19,6 +18,7 @@ import { promisify } from "util";
 import trace = require("./trace");
 import version = require("./version");
 import { IRequestOptions } from "azure-devops-node-api/interfaces/common/VsoBaseInterfaces";
+const clipboardyWrite = (data: string) => import('clipboardy').then(clipboardy => clipboardy.default.writeSync(data));
 
 export interface CoreArguments {
 	[key: string]: args.Argument<any>;
@@ -71,10 +71,12 @@ export abstract class TfCommand<TArguments extends CoreArguments, TResult> {
 	}
 
 	protected initialize(): Promise<Executor<any>> {
-		this.initialized = this.commandArgs.help.val().then(needHelp => {
-			if (needHelp) {
-				return this.run.bind(this, this.getHelp.bind(this));
-			} else {
+		// First validate arguments, then proceed with help or normal execution
+		this.initialized = this.validateArguments().then(() => {
+			return this.commandArgs.help.val().then(needHelp => {
+				if (needHelp) {
+					return this.run.bind(this, this.getHelp.bind(this));
+				} else {
 				// Set the fiddler proxy
 				return this.commandArgs.fiddler
 					.val()
@@ -137,7 +139,8 @@ export abstract class TfCommand<TArguments extends CoreArguments, TResult> {
 							return this.run.bind(this, this.exec.bind(this));
 						});
 					});
-			}
+				}
+			});
 		});
 		return this.initialized;
 	}
@@ -172,6 +175,48 @@ export abstract class TfCommand<TArguments extends CoreArguments, TResult> {
 			this.groupedArgs = group;
 		}
 		return this.groupedArgs;
+	}
+
+	/**
+	 * Validates that all provided arguments are recognized by the command.
+	 * Shows error and help if invalid arguments are found.
+	 */
+	private validateArguments(): Promise<void> {
+		const groupedArgs = this.getGroupedArgs();
+		const providedArgs = Object.keys(groupedArgs);
+		
+		// Get all valid argument names (including aliases) for this command
+		const validArgNames = new Set<string>();
+		
+		// Add all registered argument names and aliases
+		Object.keys(this.commandArgs).forEach(argName => {
+			const argObj = this.commandArgs[argName];
+			validArgNames.add(argName);
+			
+			// Add aliases
+			if (argObj.aliases) {
+				argObj.aliases.forEach(alias => {
+					validArgNames.add(alias);
+				});
+			}
+		});
+		
+		// Check for invalid arguments
+		const invalidArgs = providedArgs.filter(arg => !validArgNames.has(arg));
+		
+		if (invalidArgs.length > 0) {
+			const errorMessage = `Unrecognized argument${invalidArgs.length > 1 ? 's' : ''}: ${invalidArgs.map(arg => 
+				arg.startsWith('-') ? arg : '--' + _.kebabCase(arg)
+			).join(', ')}`;
+			
+			// Log the error and then show help
+			trace.error(errorMessage);
+			
+			// Set help flag to true so help will be shown
+			this.commandArgs.help.setValue(true);
+		}
+		
+		return Promise.resolve();
 	}
 
 	/**
@@ -223,7 +268,7 @@ export abstract class TfCommand<TArguments extends CoreArguments, TResult> {
 		}
 
 		if (argValue) {
-			this.commandArgs[argName] = new ctor(argName, friendlyName, description, argValue, false, argAliases, undocumented);
+			this.commandArgs[argName as keyof TArguments] = new ctor(argName, friendlyName, description, argValue, false, argAliases, undocumented) as unknown as TArguments[keyof TArguments];
 		} else {
 			let def: string | string[] | Promise<string[]> = null;
 			if (typeof defaultValue === "function") {
@@ -231,7 +276,7 @@ export abstract class TfCommand<TArguments extends CoreArguments, TResult> {
 			} else {
 				def = defaultValue;
 			}
-			this.commandArgs[argName] = new ctor(
+			this.commandArgs[argName as keyof TArguments] = new ctor(
 				argName,
 				friendlyName,
 				description,
@@ -240,7 +285,7 @@ export abstract class TfCommand<TArguments extends CoreArguments, TResult> {
 				argAliases,
 				undocumented,
 				promptDefault,
-			);
+			) as unknown as TArguments[keyof TArguments];
 		}
 	}
 
@@ -688,7 +733,7 @@ export abstract class TfCommand<TArguments extends CoreArguments, TResult> {
 				case "clip":
 				case "clipboard":
 					let clipboardText = this.getClipboardOutput(data);
-					return clipboardy.write(clipboardText);
+					return clipboardyWrite(clipboardText);
 				default:
 					return fsUtils.canWriteTo(path.resolve(outputDestination)).then(canWrite => {
 						if (canWrite) {

@@ -1,5 +1,9 @@
 # This Yaml Document has been converted by ESAI Yaml Pipeline Conversion Tool.
 # This pipeline will be extended to the OneESPT template
+# CI and PR build script
+#
+# There should be no deep magic here. The developer experience and CI experience
+# must remain as close to one another as possible.
 
 trigger:
 - master
@@ -38,15 +42,13 @@ extends:
       - job: job
         templateContext:
           outputs:
-          - ${{ if in(variables['build.reason'], 'IndividualCI', 'BatchedCI', 'Manual') }}:
-            - output: pipelineArtifact
-              displayName: 'Publish tfx-cli package to pipeline artifacts'
-              targetPath: '$(Build.ArtifactStagingDirectory)'
-              artifactType: 'pipeline'
-              artifactName: 'tfx-cli-package'
+          - output: pipelineArtifact
+            displayName: 'Publish tfx-cli package to pipeline artifacts'
+            targetPath: '$(Build.ArtifactStagingDirectory)'
+            artifactType: 'pipeline'
+            artifactName: 'tfx-cli-package'
         steps:
-        - checkout: self
-          clean: true
+        - template: /.azure-pipelines/common-steps.yml@self
 
         - task: NodeTool@0
           displayName: Use node 20

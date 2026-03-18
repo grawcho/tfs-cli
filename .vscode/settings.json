@@ -7,9 +7,6 @@
         "tmp/": true
     },
 	"editor.insertSpaces": false,
-	"typescript.tsdk": "./node_modules/typescript/lib",
-	"vsicons.presets.angular": false,
-	"editor.formatOnPaste": true,
-	"editor.minimap.enabled": true,
-	"editor.snippetSuggestions": "top"
+    "typescript.tsdk": "./node_modules/typescript/lib",
+    "azure-pipelines.1ESPipelineTemplatesSchemaFile": true
 }

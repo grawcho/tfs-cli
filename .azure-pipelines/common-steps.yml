@@ -1,0 +1,45 @@
+# Common steps template
+#
+# Things which happen regardless of CI, PR, or release builds
+steps:
+  - checkout: self
+    clean: true
+
+  - task: UseNode@1
+    displayName: Use Node 20
+    inputs:
+      version: "20.x"
+
+  - task: NpmAuthenticate@0
+    inputs:
+      workingFile: .npmrc
+
+  - script: npm i -g npm@8.19.4 --force
+    displayName: Use npm version 8.19.4
+
+  - bash: |
+      npm ci
+      npm run build
+    displayName: Build TFX CLI
+
+  - bash: |
+      export DEBUG_CLI_OUTPUT="$DEBUG_CLI_OUTPUT"
+      export DEBUG_MOCKSERVER_OUTPUT="$DEBUG_MOCKSERVER_OUTPUT"
+      export TFX_TRACE="$TFX_TRACE"
+      npm run test:ci
+    displayName: Run Tests
+
+  - task: PublishTestResults@2
+    displayName: Publish Test Results
+    condition: succeededOrFailed()
+    inputs:
+      testResultsFormat: 'JUnit'
+      testResultsFiles: 'test-results.xml'
+      failTaskOnFailedTests: true
+      testRunTitle: 'TFX CLI Tests'
+
+  # Generate a pipeline artifact so we can publish the package manually if there are issues with automation
+  - bash: |
+      npm pack
+      cp *.tgz '$(Build.ArtifactStagingDirectory)'
+    displayName: Run npm-pack and copy to ArtifactStagingDirectory
