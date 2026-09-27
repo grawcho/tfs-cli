@@ -43,6 +43,7 @@ tfx <command> --help
 ### Command sets
 
 * `tfx build` ([builds](docs/builds.md)): Queue, view, and get details for builds.
+* `tfx build tags` ([build tags](docs/buildtags.md)): List, add and delete build tags.
 * `tfx build tasks` ([build tasks](docs/buildtasks.md)): Create, list, upload and delete build tasks.
 * `tfx extension` ([extensions](docs/extensions.md)): Package, manage, publish _Team Foundation Server_ / _Azure DevOps_ extensions.
 * `tfx workitem` ([work items](docs/workitems.md)): Create, query and view work items.
