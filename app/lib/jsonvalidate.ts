@@ -7,6 +7,16 @@ const deprecatedRunners = ["Node", "Node6", "Node10", "Node16"];
 
 export interface TaskJson {
   id: string;
+  name: string;
+}
+
+function readTaskJson(jsonFilePath: string): any {
+  if (!fs.statSync(jsonFilePath).isFile()) {
+    throw new Error("specified task json path is not a file.");
+  }
+
+  const contents = fs.readFileSync(jsonFilePath, "utf8").replace(/^\uFEFF/, "");
+  return JSON.parse(contents);
 }
 
 /*
@@ -24,7 +34,7 @@ export function validate(jsonFilePath: string, jsonMissingErrorMessage?: string,
 
   var taskJson;
   try {
-    taskJson = require(jsonFilePath);
+    taskJson = readTaskJson(jsonFilePath);
   } catch (jsonError) {
     trace.debug("Invalid task json: %s", jsonError);
     throw new Error("Invalid task json: " + jsonError);
@@ -88,7 +98,7 @@ export function validateRunner(taskData: any, allMatchedPaths?: string[]) {
       for (const matchedPath of allMatchedPaths) {
         let matchedTaskData;
         try {
-          matchedTaskData = require(matchedPath);
+          matchedTaskData = readTaskJson(matchedPath);
         } catch {
           continue;
         }

@@ -7,9 +7,16 @@
 
 trigger:
 - master
-- releases/*
-#variables:
-#- group: npm-tokens
+
+variables:
+# Debug/verbose output variables for CLI and mock server
+- name: DEBUG_CLI_OUTPUT
+  value: 'false'
+- name: DEBUG_MOCKSERVER_OUTPUT
+  value: 'false'
+# Enable verbose tracing for TFX CLI (if supported)
+- name: TFX_TRACE
+  value: ''
 resources:
   repositories:
   - repository: 1ESPipelineTemplates
@@ -40,13 +47,6 @@ extends:
     - stage: stage
       jobs:
       - job: job
-        templateContext:
-          outputs:
-          - output: pipelineArtifact
-            displayName: 'Publish tfx-cli package to pipeline artifacts'
-            targetPath: '$(Build.ArtifactStagingDirectory)'
-            artifactType: 'pipeline'
-            artifactName: 'tfx-cli-package'
         steps:
         - template: /.azure-pipelines/common-steps.yml@self
 
