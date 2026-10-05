@@ -55,20 +55,31 @@ extends:
           inputs:
             versionSpec: "20.x"
 
+        # CFS [SFI-ES4.2.4]: every npm invocation below must resolve through the
+        # repo .npmrc (internal Azure Artifacts feed). Without NPM_CONFIG_USERCONFIG
+        # these global installs fall back to the default public registry.
         - script: npm i -g npm@10.2.4 --force
           displayName: Use npm version 10.2.4
+          env:
+            NPM_CONFIG_USERCONFIG: $(Build.SourcesDirectory)/.npmrc
 
         - script: npm i -g typescript@5.1.3 --force
           displayName: Use typescript (tsc) version 5.1.3
+          env:
+            NPM_CONFIG_USERCONFIG: $(Build.SourcesDirectory)/.npmrc
         
         - task: Npm@1
           displayName: install TFX CLI dependencies
           inputs:
             command: ci
+          env:
+            NPM_CONFIG_USERCONFIG: $(Build.SourcesDirectory)/.npmrc
         
         - bash: |
             npm run build
           displayName: Build TFX CLI
+          env:
+            NPM_CONFIG_USERCONFIG: $(Build.SourcesDirectory)/.npmrc
 
         - task: Npm@1
           displayName: Publish tfx-cli to kusto npm
@@ -84,6 +95,8 @@ extends:
             npm pack
             cp *.tgz '$(Build.ArtifactStagingDirectory)'
           displayName: Run npm-pack and copy to ArtifactStagingDirectory
+          env:
+            NPM_CONFIG_USERCONFIG: $(Build.SourcesDirectory)/.npmrc
 
         # Install node 16 for CodeQL 3000
         - task: NodeTool@0
